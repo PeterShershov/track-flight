@@ -1,7 +1,6 @@
-// The app: it keeps the latest flight, checks FlightAware on a timer, and sends notifications.
+// The app: it keeps the latest flight and checks FlightAware on a timer.
 
 import { readFile } from "node:fs/promises";
-import { events, notify, type EventState } from "./events.ts";
 import { fetchPage, firstFlight, HttpError, pickLink, resolveIdent, reverseGeocode } from "./flightaware.ts";
 import { inAir, parseFlight, position, type Flight } from "./flight.ts";
 import { oceanName, overLand } from "./geo.ts";
@@ -14,9 +13,6 @@ export interface Options {
   date: string | null;
   /** Seconds between checks. */
   interval: number;
-  /** Minutes between position notifications. 0 turns them off. */
-  posEvery: number;
-  notify: boolean;
   /** Test aid: read the flight from this saved FlightAware JSON file. */
   json: string | null;
 }
@@ -26,7 +22,6 @@ export class App implements Snapshot {
   err = "";
   checked = 0;
   retryAt = 0;
-  notifyOn: boolean;
   notice = "";
   readonly interval: number;
 
@@ -34,14 +29,12 @@ export class App implements Snapshot {
   private link: string | null = null;
   private geoKey = "";
   private geoName = "";
-  private readonly eventState: EventState = {};
   private stopped = false;
   private wake: (() => void) | null = null;
 
   constructor(opts: Options) {
     this.opts = opts;
     this.interval = Math.max(30, opts.interval);
-    this.notifyOn = opts.notify;
   }
 
   /** Fetch the flight once and keep it in `fl`. Throws when it cannot. */
@@ -69,15 +62,9 @@ export class App implements Snapshot {
     if (!fl) throw new Error("FlightAware sent no data for this flight");
     fl.place = await this.placeFor(fl);
 
-    const prev = this.fl;
     this.fl = fl;
     this.err = "";
     this.checked = Date.now() / 1000;
-    if (prev && this.notifyOn && !opts.json) {
-      const title = `${fl.name} · ${fl.org.code} → ${fl.dst.code}`;
-      for (const m of events(prev, fl, this.eventState, Date.now() / 1000, opts.posEvery))
-        notify(title, m.text, m.sound);
-    }
   }
 
   /** The region under the plane. OpenStreetMap names land, a small table names the sea. */

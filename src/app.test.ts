@@ -7,7 +7,7 @@ import { fakeFa, fakeFetch, html, until } from "./test-helpers.ts";
 
 afterEach(() => mock.restoreAll());
 
-const opts: Options = { flight: "UA125", date: null, interval: 60, posEvery: 30, notify: false, json: null };
+const opts: Options = { flight: "UA125", date: null, interval: 60, json: null };
 
 const flightAware = (url: string) =>
   url.includes("omnisearch")

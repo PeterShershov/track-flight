@@ -26,7 +26,6 @@ export interface Snapshot {
   /** When we try again after an error, in Unix seconds. */
   retryAt: number;
   interval: number;
-  notifyOn: boolean;
   /** A short message for the footer, such as "refreshing…". Empty for none. */
   notice: string;
 }
@@ -230,7 +229,6 @@ function footer(app: Snapshot, w: number, now: number): string {
   const help: [string, string][] = [
     ["q", "quit"],
     ["r", "refresh"],
-    ["n", `notifications ${app.notifyOn ? "on" : "off"}`],
   ];
   const keys = help.map(([k, v]) => paint(k, P.txt, true) + paint(` ${v}`, P.dim)).join("  ");
   let status: string;

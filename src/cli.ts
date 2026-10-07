@@ -13,15 +13,13 @@ Usage:
 Options:
   -d, --date YYYY-MM-DD   Follow the flight that departs on this date (local time at the origin).
   -i, --interval SECONDS  Seconds between data checks. Default 60. Minimum 30.
-  --pos-every MINUTES     Send a position notification this often in the air. Default 30. 0 = off.
-  --no-notify             Do not send macOS notifications.
   --once                  Print one frame and exit (no full-screen mode).
   --size WxH              Frame size for --once, for example 110x34.
   --json FILE             Test aid: read the flight from a saved FlightAware JSON file.
   --now EPOCH             Test aid: pretend this is the current time.
   -h, --help              Show this text.
 
-Keys:  q quit   r refresh now   n notifications on/off
+Keys:  q quit   r refresh now
 
 Flight data comes from the public FlightAware flight page (not an official API).
 `;
@@ -50,8 +48,6 @@ export function parseCli(args: string[]): Cli {
     options: {
       date: { type: "string", short: "d" },
       interval: { type: "string", short: "i" },
-      "pos-every": { type: "string" },
-      "no-notify": { type: "boolean" },
       once: { type: "boolean" },
       size: { type: "string" },
       json: { type: "string" },
@@ -69,8 +65,6 @@ export function parseCli(args: string[]): Cli {
       flight: positionals[0] ?? "",
       date: values.date ?? null,
       interval: whole("-i", values.interval, 60),
-      posEvery: whole("--pos-every", values["pos-every"], 30),
-      notify: !values["no-notify"],
       json: values.json ?? null,
     },
     help: values.help ?? false,

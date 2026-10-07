@@ -10,7 +10,7 @@ const plain = (lines: string[]) =>
   lines.map((l) => l.replace(new RegExp(`${String.fromCharCode(27)}\\[[0-9;]*m`, "g"), "")).join("\n");
 
 function app(fl: Flight | null, extra: Partial<Snapshot> = {}): Snapshot {
-  return { fl, err: "", checked: NOW, retryAt: 0, interval: 60, notifyOn: true, notice: "", ...extra };
+  return { fl, err: "", checked: NOW, retryAt: 0, interval: 60, notice: "", ...extra };
 }
 
 function states(): [string, Flight][] {
@@ -110,7 +110,6 @@ test("the footer shows a notice, an offline state and stale data", () => {
   const offline = plain(render(app(fixtureFlight(), { err: "boom", retryAt: NOW + 30 }), 120, 36, NOW));
   assert.ok(offline.includes("offline") && offline.includes("boom") && offline.includes("retrying in 30s"));
   assert.ok(plain(render(app(fixtureFlight(), { checked: NOW - 1000 }), 120, 36, NOW)).includes("stale"));
-  assert.ok(plain(render(app(fixtureFlight(), { notifyOn: false }), 120, 36, NOW)).includes("notifications off"));
 });
 
 test("a terminal that is too small gets a plain message", () => {

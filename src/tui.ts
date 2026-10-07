@@ -64,9 +64,6 @@ export function runTui(app: App): Promise<void> {
         if (ch === "r" || ch === "R") {
           app.refresh();
           say("refreshing…");
-        } else if (ch === "n" || ch === "N") {
-          app.notifyOn = !app.notifyOn;
-          say(`notifications ${app.notifyOn ? "on" : "off"}`);
         }
       }
       draw();
