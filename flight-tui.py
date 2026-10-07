@@ -35,6 +35,7 @@ import termios
 import threading
 import time
 import tty
+import urllib.error
 import urllib.parse
 import urllib.request
 from datetime import datetime, timezone
@@ -822,11 +823,18 @@ def progress_lines(fl, pos, now, w, wide):
     return [l1, " " * pad + l2]
 
 
+def retry_text(app, now):
+    left = int(app.retry_at - now)
+    if not app.retry_at or left < 0:
+        return "retrying"
+    return f"retrying in {left}s" if left < 60 else f"retrying in {fmt_dur(left)}"
+
+
 def footer(app, w, now):
     keys = "  ".join(paint(k, P.txt, bold=True) + paint(f" {v}", P.dim) for k, v in
                      (("q", "quit"), ("r", "refresh"), ("n", "notifications " + ("on" if app.notify_on else "off"))))
     if app.err:
-        status = paint("● offline", P.bad, bold=True) + paint(f" · {app.err[:50]} · retrying", P.dim)
+        status = paint("● offline", P.bad, bold=True) + paint(f" · {app.err[:55]} · {retry_text(app, now)}", P.dim)
     else:
         age = max(0, now - app.checked) if app.checked else 0
         fresh = age < app.interval * 2 + 5
@@ -846,7 +854,7 @@ def render(app, W, H, now):
         msg = paint(f"{spin}  Contacting FlightAware…", P.acc, bold=True)
         lines = [""] * (H // 2 - 2) + [" " * max(0, (W - 28) // 2) + msg]
         if app.err:
-            lines += ["", " " * 2 + paint(app.err, P.bad)]
+            lines += ["", " " * 2 + paint(app.err, P.bad), " " * 2 + paint(retry_text(app, now) + ". Press r to try now.", P.dim)]
         return lines
     pos = position(fl, now)
     wide = W >= 100
@@ -929,6 +937,7 @@ class App:
         self.args = args
         self.interval = max(30, args.interval)
         self.fl, self.err, self.checked, self.link = None, "", 0.0, None
+        self.retry_at = 0.0
         self.notify_on = not args.no_notify
         self.stop, self.wake = threading.Event(), threading.Event()
         self.geo_key, self.geo_name = None, ""
@@ -941,6 +950,7 @@ class App:
             with open(a.json) as f:
                 boot = json.load(f)
         else:
+            first = None
             if not self.link:
                 first = first_flight(fa_page(f"/live/flight/{resolve_ident(a.flight)}"))
                 if not first or not first.get("displayIdent"):
@@ -948,7 +958,8 @@ class App:
                 self.link = pick_link(first, a.date)
                 if not self.link:
                     raise RuntimeError(f"No {a.flight} flight on {a.date} (FlightAware lists about 2 days ahead)")
-            boot = fa_page(self.link)
+            # Without -d, the first page already holds the flight we follow. That saves one request.
+            boot = {"flights": {"x": first}} if first and not a.date else fa_page(self.link)
         f = first_flight(boot)
         if not f or not f.get("displayIdent"):
             raise RuntimeError("FlightAware sent no data for this flight")
@@ -986,12 +997,27 @@ class App:
         return self.geo_name or "Over land"
 
     def poll(self):
+        backoff = 0
         while not self.stop.is_set():
+            wait = self.interval
             try:
                 self.load()
+                backoff = 0
+            except urllib.error.HTTPError as e:
+                if e.code == 429:       # Rate limited. Wait longer each time, and obey Retry-After.
+                    try:
+                        retry_after = int(e.headers.get("Retry-After", 0))
+                    except (TypeError, ValueError):
+                        retry_after = 0
+                    backoff = min(900, max(retry_after, backoff * 2, 120))
+                    wait, self.err = backoff, "FlightAware is limiting requests (HTTP 429)"
+                else:
+                    self.err = f"FlightAware returned HTTP {e.code}"
             except Exception as e:
                 self.err = str(e) or e.__class__.__name__
-            self.wake.wait(self.interval)
+                wait = self.interval if self.fl else 15
+            self.retry_at = 0 if not self.err else time.time() + wait
+            self.wake.wait(wait)
             self.wake.clear()
 
 
