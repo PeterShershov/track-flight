@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterEach, mock, test } from "node:test";
 import { App, type Options } from "./app.ts";
 import { page } from "./fixture.ts";
-import { fakeFetch, html, until } from "./test-helpers.ts";
+import { fakeFa, fakeFetch, html, until } from "./test-helpers.ts";
 
 afterEach(() => mock.restoreAll());
 
@@ -15,7 +15,7 @@ const flightAware = (url: string) =>
     : new Response(html(page));
 
 test("load follows the flight with two requests: the search and the page", async () => {
-  const urls = fakeFetch(flightAware);
+  const urls = fakeFa(flightAware);
   const app = new App(opts);
   await app.load();
   assert.equal(app.fl?.name, "United 125");
@@ -30,25 +30,26 @@ test("load follows the flight with two requests: the search and the page", async
 });
 
 test("load with a date fetches that day's page", async () => {
-  const urls = fakeFetch(flightAware);
+  const urls = fakeFa(flightAware);
   await new App({ ...opts, date: "2026-10-08" }).load();
   assert.equal(urls.length, 3);
   assert.match(urls[2] ?? "", /history\/20261008/);
 });
 
 test("load names the sea under the plane without asking OpenStreetMap", async () => {
-  const urls = fakeFetch(flightAware);
+  fakeFa(flightAware);
+  const openStreetMap = fakeFetch(() => Response.json({ address: { country: "Nowhere" } }));
   const app = new App(opts);
   await app.load();
   assert.equal(app.fl?.place, "North Atlantic Ocean");
-  assert.ok(!urls.some((u) => u.includes("nominatim")));
+  assert.deepEqual(openStreetMap, []);
 });
 
 test("load says so when FlightAware does not know the flight, or the date", async () => {
-  fakeFetch(() => new Response(html({ flights: { INVALID: { displayIdent: null } } })));
+  fakeFa(() => new Response(html({ flights: { INVALID: { displayIdent: null } } })));
   await assert.rejects(new App(opts).load(), /does not know flight UA125/);
   mock.restoreAll();
-  fakeFetch(flightAware);
+  fakeFa(flightAware);
   await assert.rejects(new App({ ...opts, date: "2020-01-01" }).load(), /No UA125 flight on 2020-01-01/);
 });
 
@@ -59,7 +60,7 @@ test("load can read a saved file", async () => {
 });
 
 test("after a 429, poll waits for Retry-After and says so", async () => {
-  fakeFetch(() => new Response("slow down", { status: 429, headers: { "retry-after": "300" } }));
+  fakeFa(() => new Response("slow down", { status: 429, headers: { "retry-after": "300" } }));
   const app = new App(opts);
   const running = app.poll();
   await until(() => app.err !== "");
@@ -71,7 +72,7 @@ test("after a 429, poll waits for Retry-After and says so", async () => {
 });
 
 test("a 429 with no Retry-After waits at least 2 minutes", async () => {
-  fakeFetch(() => new Response("", { status: 429 }));
+  fakeFa(() => new Response("", { status: 429 }));
   const app = new App(opts);
   const running = app.poll();
   await until(() => app.err !== "");
@@ -82,7 +83,7 @@ test("a 429 with no Retry-After waits at least 2 minutes", async () => {
 });
 
 test("other errors retry soon when nothing has loaded yet, and on the interval after that", async () => {
-  fakeFetch(() => new Response("", { status: 503 }));
+  fakeFa(() => new Response("", { status: 503 }));
   const app = new App(opts);
   const running = app.poll();
   await until(() => app.err !== "");
@@ -94,7 +95,7 @@ test("other errors retry soon when nothing has loaded yet, and on the interval a
 
 test("refresh wakes poll up early, and a good check clears the error", async () => {
   let fail = true;
-  const urls = fakeFetch((url) => (fail ? new Response("", { status: 429 }) : flightAware(url)));
+  const urls = fakeFa((url) => (fail ? new Response("", { status: 429 }) : flightAware(url)));
   const app = new App(opts);
   const running = app.poll();
   await until(() => app.err !== "");
