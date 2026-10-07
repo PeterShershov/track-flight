@@ -4,25 +4,27 @@ Your flight is in the air and you are refreshing Google. Stop. Watch it fly inst
 
 <img width="1840" height="1106" alt="image" src="https://github.com/user-attachments/assets/2af5a340-e132-4aa4-a24e-5e161435a120" />
 
-- `flight-tui.py`: a full-screen terminal dashboard with a map, graphs and a plane.
+- `flight-tui.ts`: a full-screen terminal dashboard with a map, graphs and a plane. TypeScript, run straight from the file.
 - `track-flight.sh`: a quiet background script that sends macOS notifications.
 
 ## Run it
 
 ```bash
-./flight-tui.py UA125
+./flight-tui.ts UA125
 ```
 
-No `python3` in front, no packages to install. The first line of the file is a shebang (`#!/usr/bin/env python3`), and the file is executable, so your shell knows what to do. Python 3.9+ is all you need.
+No `node` in front, no build, no `npm install`. The first line of the file is a shebang (`#!/usr/bin/env node`) and the file is executable, so your shell knows what to do. Node runs TypeScript natively, so there is nothing to compile.
+
+You need Node 22.18 or newer (`.nvmrc` says 24). macOS does not ship with Node, so if `node -v` fails: `brew install node`.
 
 Want to run it from anywhere, without the `./`? Link it into a folder on your `PATH`:
 
 ```bash
-ln -s "$PWD/flight-tui.py" ~/.local/bin/flight
+ln -s "$PWD/flight-tui.ts" ~/.local/bin/flight
 flight UA125
 ```
 
-(Same trick works for `track-flight.sh`. The link still finds `land.json` next to the real file.)
+(Same trick works for `track-flight.sh`. The link still finds `land.json`, because Node follows it back to the real file.)
 
 Make the window at least 100x30 and you get the full show: route map (lit by the real sun, so you can watch night fall), altitude and speed graphs, gates, delays and local times.
 
@@ -45,6 +47,13 @@ nohup ./track-flight.sh UA125 >> ~/track-flight.log 2>&1 &
 ```
 
 It speaks up for gate, takeoff, landing, delays of 10+ minutes, gate changes, cancellation and diversion. Needs `curl` and `jq`. Stop it with `pkill -f track-flight.sh`.
+
+## Hacking
+
+```bash
+npm install     # dev tools only: TypeScript, ESLint, Prettier
+npm test        # typecheck, lint, prettier, then the tests
+```
 
 ## Good to know
 

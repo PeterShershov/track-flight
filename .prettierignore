@@ -1,0 +1,5 @@
+# Ignore artifacts:
+dist
+tsconfig.json
+*.md
+land.json
