@@ -2,7 +2,7 @@
 
 Your flight is in the air and you are refreshing Google. Stop. Watch it fly instead.
 
-<img width="1840" height="1106" alt="image" src="https://github.com/user-attachments/assets/2af5a340-e132-4aa4-a24e-5e161435a120" />
+﻿﻿﻿<img width="1840" height="1106" alt="Screenshot 2026-10-07 at 10 59 23" src="https://github.com/user-attachments/assets/2ae7cbb1-253b-4914-89d6-e6359c4cf6ef" />
 
 - `flight-tui.ts`: a full-screen terminal dashboard with a map, graphs and a plane. TypeScript, run straight from the file.
 - `track-flight.sh`: a quiet background script that sends macOS notifications.
