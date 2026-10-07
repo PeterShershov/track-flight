@@ -4,10 +4,52 @@ Your flight is in the air and you are refreshing Google. Stop. Watch it fly inst
 
 ﻿﻿﻿<img width="1840" height="1106" alt="Screenshot 2026-10-07 at 10 59 23" src="https://github.com/user-attachments/assets/2ae7cbb1-253b-4914-89d6-e6359c4cf6ef" />
 
-- `flight-tui.ts`: a full-screen terminal dashboard with a map, graphs and a plane. TypeScript, run straight from the file.
-- `track-flight.sh`: a quiet background script that sends macOS notifications.
+A full-screen terminal dashboard with a map, graphs and a plane. It is TypeScript, and you run it straight from `flight-tui.ts`.
 
-## Run it
+## How to run it (step by step)
+
+You do not need to know how to code. You need a Mac and 5 minutes.
+
+1. **Open Terminal.** Press `Cmd + Space`, type `Terminal`, press `Enter`.
+2. **Check for Node.** Type this and press `Enter`:
+
+   ```bash
+   node -v
+   ```
+
+   - If you see a number like `v24.1.0`, go to step 3. The number must be 22.18 or higher.
+   - If you see `command not found`, install Node. Go to [nodejs.org](https://nodejs.org), download the installer and run it. Then close Terminal, open it again and repeat this step.
+
+3. **Download this project.** Run:
+
+   ```bash
+   git clone https://github.com/PeterShershov/track-flight.git
+   cd track-flight
+   ```
+
+   No `git`? Click the green **Code** button on the GitHub page, choose **Download ZIP** and unzip it. Then in Terminal type `cd ` (with a space), drag the unzipped folder into the window and press `Enter`.
+
+4. **Find your flight number.** It is on your ticket. It has an airline code and a number, for example `UA125` or `LY001`. Do not use spaces.
+5. **Start the dashboard.** Run:
+
+   ```bash
+   ./flight-tui.ts UA125
+   ```
+
+   Replace `UA125` with your flight number. The screen fills with a map, graphs and a plane.
+
+6. **Quit.** Press `q`.
+
+If something goes wrong:
+
+| What you see | What to do |
+|---|---|
+| `permission denied` | Run `chmod +x flight-tui.ts`, then try again |
+| `command not found: node` | Install Node (step 2) |
+| The screen looks squashed | Make the Terminal window bigger (100 columns by 30 rows or more) |
+| `FlightAware does not know flight ...` | Check the flight number. Try the date: `./flight-tui.ts UA125 -d 2026-10-09` |
+
+## Run it (short version)
 
 ```bash
 ./flight-tui.ts UA125
@@ -24,29 +66,17 @@ ln -s "$PWD/flight-tui.ts" ~/.local/bin/flight
 flight UA125
 ```
 
-(Same trick works for `track-flight.sh`. The link still finds `land.json`, because Node follows it back to the real file.)
+(The link still finds `land.json`, because Node follows it back to the real file.)
 
 Make the window at least 100x30 and you get the full show: route map (lit by the real sun, so you can watch night fall), altitude and speed graphs, gates, delays and local times.
 
-Keys: `q` quit · `r` refresh · `n` notifications on/off.
+Keys: `q` quit · `r` refresh.
 
 | Option | What it does |
 |---|---|
 | `-d 2026-10-09` | Follow the flight that departs on this date |
 | `-i 60` | Seconds between checks (minimum 30) |
-| `--pos-every 30` | Minutes between position pings in the air. `0` = never |
-| `--no-notify` | Silence the notifications |
 | `--once` | Print one frame and exit |
-
-## Notifications only
-
-For people who prefer to be told, not shown:
-
-```bash
-nohup ./track-flight.sh UA125 >> ~/track-flight.log 2>&1 &
-```
-
-It speaks up for gate, takeoff, landing, delays of 10+ minutes, gate changes, cancellation and diversion. Needs `curl` and `jq`. Stop it with `pkill -f track-flight.sh`.
 
 ## Hacking
 
