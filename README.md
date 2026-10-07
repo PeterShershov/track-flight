@@ -1,46 +1,51 @@
-# track-flight
+# track-flight ✈
 
-Follow one flight from your Mac. Two tools use the same data:
+Your flight is in the air and you are refreshing Google. Stop. Watch it fly instead.
 
-- `flight-tui.py` is a full-screen terminal dashboard.
-- `track-flight.sh` runs in the background and sends macOS notifications.
+- `flight-tui.py`: a full-screen terminal dashboard with a map, graphs and a plane.
+- `track-flight.sh`: a quiet background script that sends macOS notifications.
 
-## Dashboard
+## Run it
 
 ```bash
 ./flight-tui.py UA125
 ```
 
-The dashboard shows:
+No `python3` in front, no packages to install. The first line of the file is a shebang (`#!/usr/bin/env python3`), and the file is executable, so your shell knows what to do. Python 3.9+ is all you need.
 
-- A braille-dot world map with the planned route, the flown track and the plane. Land is lit by the real sun, so you see where it is night.
-- Altitude and ground speed graphs, heading, position and the region under the plane.
-- Departure and arrival boxes with gates, delays and local times.
-- A progress bar with distance flown, distance to go and time to landing.
+Want to run it from anywhere, without the `./`? Link it into a folder on your `PATH`:
 
-Keys: `q` quit, `r` refresh now, `n` notifications on or off.
+```bash
+ln -s "$PWD/flight-tui.py" ~/.local/bin/flight
+flight UA125
+```
 
-| Option | Meaning |
+(Same trick works for `track-flight.sh`. The link still finds `land.json` next to the real file.)
+
+Make the window at least 100x30 and you get the full show: route map (lit by the real sun, so you can watch night fall), altitude and speed graphs, gates, delays and local times.
+
+Keys: `q` quit · `r` refresh · `n` notifications on/off.
+
+| Option | What it does |
 |---|---|
-| `-d 2026-10-09` | Follow the flight that departs on this date (local time at the origin). |
-| `-i 60` | Seconds between checks. Minimum 30. |
-| `--pos-every 30` | Minutes between position notifications in the air. `0` turns them off. |
-| `--no-notify` | Do not send notifications. |
-| `--once` | Print one frame and exit. |
-
-The dashboard needs Python 3.9 or newer and a terminal of at least 80x20. A width of 100 or more shows the cockpit panel.
-It sends the same notifications as the script below.
+| `-d 2026-10-09` | Follow the flight that departs on this date |
+| `-i 60` | Seconds between checks (minimum 30) |
+| `--pos-every 30` | Minutes between position pings in the air. `0` = never |
+| `--no-notify` | Silence the notifications |
+| `--once` | Print one frame and exit |
 
 ## Notifications only
+
+For people who prefer to be told, not shown:
 
 ```bash
 nohup ./track-flight.sh UA125 >> ~/track-flight.log 2>&1 &
 ```
 
-It notifies on gate departure, takeoff, landing and arrival at the gate. It also notifies on delays of 10 minutes or more, gate changes, cancellation and diversion. Run `./track-flight.sh -h` for options. It needs `curl` and `jq`.
+It speaks up for gate, takeoff, landing, delays of 10+ minutes, gate changes, cancellation and diversion. Needs `curl` and `jq`. Stop it with `pkill -f track-flight.sh`.
 
-## Notes
+## Good to know
 
-- Units are metric and times are 24-hour, in local time at each airport.
-- Flight data comes from the public FlightAware flight page. This is not an official API. It can break when FlightAware changes the page, and FlightAware may rate-limit frequent requests.
-- `land.json` is a general world map (not specific to one flight). It is the Natural Earth 1:50m land data, simplified. Natural Earth is public domain: https://www.naturalearthdata.com
+- Metric units, 24-hour clock, local time at each airport.
+- The data comes from the public FlightAware page, not an official API. If they change the page, this breaks. If you refresh too often, they send a `429`. The dashboard waits and retries.
+- `land.json` is a general world map (Natural Earth 1:50m, public domain), not a map of one flight. It zooms to fit any route.
