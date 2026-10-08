@@ -88,5 +88,5 @@ npm test        # typecheck, lint, prettier, then the tests
 ## Good to know
 
 - Metric units, 24-hour clock, local time at each airport.
-- The data comes from the public FlightAware page, not an official API. If they change the page, this breaks. If you refresh too often, they send a `429`. The dashboard waits and retries.
+- The data comes from the public FlightAware page. If you refresh too often, they send a `429`. The dashboard waits and retries.
 - `land.json` is a general world map (Natural Earth 1:50m, public domain), not a map of one flight. It zooms to fit any route.
