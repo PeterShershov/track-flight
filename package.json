@@ -1,12 +1,25 @@
 {
-  "name": "track-flight",
-  "version": "0.0.0",
-  "private": true,
+  "name": "track-my-flight",
+  "version": "0.1.0",
+  "description": "A live, full-screen flight tracker for your terminal",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/PeterShershov/track-flight.git"
+  },
   "type": "module",
+  "bin": {
+    "track-my-flight": "dist/flight-tui.js"
+  },
+  "files": [
+    "dist"
+  ],
   "engines": {
     "node": ">=22.18"
   },
   "scripts": {
+    "build": "rm -rf dist && tsc -p tsconfig.build.json && cp land.json dist/",
+    "prepare": "npm run build",
     "pretest": "npm run typecheck && npm run lint && npm run prettier:check",
     "typecheck": "tsc --noEmit",
     "lint": "eslint",

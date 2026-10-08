@@ -6,7 +6,13 @@ Your flight is in the air and you are refreshing Google. Stop. Watch it fly inst
 
 A full-screen terminal dashboard with a map, graphs and a plane. It is TypeScript, and you run it straight from `flight-tui.ts`.
 
-## How to run it (step by step)
+## Run with npx
+
+```bash
+npx track-my-flight UA125
+```
+
+## Clone and Run (step by step)
 
 You do not need to know how to code. You need a Mac and 5 minutes.
 
@@ -90,3 +96,7 @@ npm test        # typecheck, lint, prettier, then the tests
 - Metric units, 24-hour clock, local time at each airport.
 - The data comes from the public FlightAware page. If you refresh too often, they send a `429`. The dashboard waits and retries.
 - `land.json` is a general world map (Natural Earth 1:50m, public domain), not a map of one flight. It zooms to fit any route.
+
+## License
+
+[MIT](LICENSE)
